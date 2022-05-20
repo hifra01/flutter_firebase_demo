@@ -122,7 +122,7 @@ class _RegisterFormState extends State<RegisterForm> {
         UserCredential result = await _auth.createUserWithEmailAndPassword(
             email: email, password: password);
         User user = result.user!;
-        user.updateDisplayName(fullName);
+        await user.updateDisplayName(fullName);
         Navigator.pushReplacementNamed(context, HomePage.routeName);
       } on FirebaseException catch (e) {
         setState(() {
