@@ -1,4 +1,5 @@
 import 'package:email_validator/email_validator.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_firebase_demo/src/pages/home_page.dart';
 import 'package:flutter_firebase_demo/src/pages/login_page.dart';
@@ -82,6 +83,8 @@ class _RegisterFormState extends State<RegisterForm> {
   bool _hideConfirmPassword = true;
   bool _isRegisterDisabled = false;
 
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
   @override
   void initState() {
     super.initState();
@@ -111,9 +114,38 @@ class _RegisterFormState extends State<RegisterForm> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Sedang membuat akun...'),
+          duration: Duration(seconds: 3),
         ),
       );
-      Navigator.pushReplacementNamed(context, HomePage.routeName);
+
+      try {
+        UserCredential result = await _auth.createUserWithEmailAndPassword(
+            email: email, password: password);
+        User user = result.user!;
+        user.updateDisplayName(fullName);
+        Navigator.pushReplacementNamed(context, HomePage.routeName);
+      } on FirebaseException catch (e) {
+        setState(() {
+          _isRegisterDisabled = false;
+        });
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Terjadi kesalahan'),
+              content: Text(e.message ?? "Terjadi kesalahan"),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text("Tutup"),
+                )
+              ],
+            );
+          },
+        );
+      }
     }
   }
 
@@ -140,6 +172,7 @@ class _RegisterFormState extends State<RegisterForm> {
                 if (value == null || value.isEmpty) {
                   return 'Mohon masukkan nama Anda';
                 }
+                return null;
               },
             ),
             const SizedBox(
@@ -156,6 +189,7 @@ class _RegisterFormState extends State<RegisterForm> {
                 } else if (!EmailValidator.validate(value)) {
                   return 'Format e-mail tidak valid';
                 }
+                return null;
               },
               keyboardType: TextInputType.emailAddress,
             ),
@@ -182,6 +216,7 @@ class _RegisterFormState extends State<RegisterForm> {
                 } else if (value.length < 6) {
                   return 'Panjang password minimal 6 karakter';
                 }
+                return null;
               },
               keyboardType: TextInputType.visiblePassword,
             ),
@@ -208,6 +243,7 @@ class _RegisterFormState extends State<RegisterForm> {
                     value != _passwordController.text) {
                   return 'Konfirmasi password tidak sesuai';
                 }
+                return null;
               },
               keyboardType: TextInputType.visiblePassword,
             ),
