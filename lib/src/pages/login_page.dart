@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_firebase_demo/src/pages/home_page.dart';
 import 'package:flutter_firebase_demo/src/pages/register_page.dart';
@@ -78,6 +79,8 @@ class _LoginFormState extends State<LoginForm> {
   bool _hidePassword = true;
   bool _isLoginDisabled = false;
 
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
   @override
   void initState() {
     super.initState();
@@ -104,7 +107,35 @@ class _LoginFormState extends State<LoginForm> {
           content: Text('Mencoba login...'),
         ),
       );
-      Navigator.pushReplacementNamed(context, HomePage.routeName);
+
+      try {
+        await _auth.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+        Navigator.pushReplacementNamed(context, HomePage.routeName);
+      } on FirebaseException catch (e) {
+        setState(() {
+          _isLoginDisabled = false;
+        });
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Terjadi kesalahan'),
+              content: Text(e.message ?? "Terjadi kesalahan"),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text("Tutup"),
+                )
+              ],
+            );
+          },
+        );
+      }
     }
   }
 
