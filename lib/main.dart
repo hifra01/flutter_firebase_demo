@@ -6,6 +6,7 @@ import 'package:flutter_firebase_demo/src/pages/login_page.dart';
 import 'package:flutter_firebase_demo/src/pages/register_page.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
