@@ -10,11 +10,12 @@ class TasksSection extends StatefulWidget {
 }
 
 class _TasksSectionState extends State<TasksSection> {
-  TasksFirestore _tasksFirestore = TasksFirestore();
+  final TasksFirestore _tasksFirestore = TasksFirestore();
   List<TaskItem> _tasksList = [];
 
   Future<void> _getTasks() async {
     _tasksList = await _tasksFirestore.getAllTasks();
+    print(_tasksList);
   }
 
   @override
@@ -22,9 +23,8 @@ class _TasksSectionState extends State<TasksSection> {
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: () async {
-          setState(() async {
-            await _getTasks();
-          });
+          await _getTasks();
+          setState(() {});
         },
         child: ListView.builder(
           padding: const EdgeInsets.all(48),
