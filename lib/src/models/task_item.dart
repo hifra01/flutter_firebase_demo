@@ -7,6 +7,7 @@ class TaskItem {
   String id;
   String task;
   bool isCompleted;
+
   TaskItem({
     required this.id,
     required this.task,

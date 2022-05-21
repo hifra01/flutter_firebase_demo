@@ -25,4 +25,16 @@ class TasksFirestore {
       (index) => TaskItem.fromQueryDocumentSnapshot(tasks[index]),
     );
   }
+
+  Future<void> setCompletedValue(TaskItem taskItem, bool value) async {
+    DocumentReference currentTaskItem = _firestore
+        .collection('users')
+        .doc(_auth.currentUser!.uid)
+        .collection('tasks')
+        .doc(taskItem.id);
+
+    await currentTaskItem.set({
+      'isCompleted': value,
+    }, SetOptions(merge: true));
+  }
 }

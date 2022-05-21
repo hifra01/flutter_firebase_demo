@@ -1,6 +1,9 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_firebase_demo/src/models/task_item.dart';
 import 'package:flutter_firebase_demo/src/services/tasks_firestore.dart';
+
+final TasksFirestore _tasksFirestore = TasksFirestore();
 
 class TasksSection extends StatefulWidget {
   const TasksSection({Key? key}) : super(key: key);
@@ -10,7 +13,6 @@ class TasksSection extends StatefulWidget {
 }
 
 class _TasksSectionState extends State<TasksSection> {
-  final TasksFirestore _tasksFirestore = TasksFirestore();
   List<TaskItem> _tasksList = [];
 
   Future<void> _getTasks() async {
@@ -47,18 +49,44 @@ class TaskChecklist extends StatefulWidget {
 }
 
 class _TaskChecklistState extends State<TaskChecklist> {
+  bool isLoading = false;
+
+  void onCheckboxChanged(bool? value) async {
+    try {
+      setState(() {
+        isLoading = true;
+      });
+      await _tasksFirestore.setCompletedValue(widget.task, value!);
+      setState(() {
+        isLoading = false;
+        widget.task.isCompleted = value;
+      });
+    } on FirebaseException catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("Terjadi kesalahan"),
+          content: SingleChildScrollView(
+            child: Text(e.message ?? "Terjadi kesalahan"),
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Checkbox(
-          value: widget.task.isCompleted,
-          onChanged: (bool? value) {
-            setState(() {
-              widget.task.isCompleted = value!;
-            });
-          },
-        ),
+        isLoading
+            ? const CircularProgressIndicator()
+            : Checkbox(
+                value: widget.task.isCompleted,
+                onChanged: onCheckboxChanged,
+              ),
         const SizedBox(
           width: 16,
         ),
