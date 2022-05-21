@@ -28,12 +28,17 @@ class _TasksSectionState extends State<TasksSection> {
           await _getTasks();
           setState(() {});
         },
-        child: ListView.builder(
-          padding: const EdgeInsets.all(48),
-          itemCount: _tasksList.length,
-          itemBuilder: (context, index) =>
-              TaskChecklist(task: _tasksList[index]),
-        ),
+        child: _tasksList.length == 0
+            ? ListView(
+                padding: const EdgeInsets.all(48),
+                children: [Center(child: Text("Belum ada tugas"))],
+              )
+            : ListView.builder(
+                padding: const EdgeInsets.all(48),
+                itemCount: _tasksList.length,
+                itemBuilder: (context, index) =>
+                    TaskChecklist(task: _tasksList[index]),
+              ),
       ),
     );
   }
@@ -90,7 +95,13 @@ class _TaskChecklistState extends State<TaskChecklist> {
         const SizedBox(
           width: 16,
         ),
-        Text(widget.task.task),
+        Text(
+          widget.task.task,
+          style: TextStyle(
+            decoration:
+                widget.task.isCompleted ? TextDecoration.lineThrough : null,
+          ),
+        ),
       ],
     );
   }
