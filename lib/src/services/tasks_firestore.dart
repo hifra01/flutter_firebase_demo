@@ -37,4 +37,16 @@ class TasksFirestore {
       'isCompleted': value,
     }, SetOptions(merge: true));
   }
+
+  Future<void> addNewTask(String task) async {
+    CollectionReference tasksCollection = _firestore
+        .collection('users')
+        .doc(_auth.currentUser!.uid)
+        .collection('tasks');
+
+    await tasksCollection.add({
+      'task': task,
+      'isCompleted': false,
+    });
+  }
 }

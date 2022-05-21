@@ -31,14 +31,28 @@ class _TasksSectionState extends State<TasksSection> {
         child: _tasksList.length == 0
             ? ListView(
                 padding: const EdgeInsets.all(48),
-                children: [Center(child: Text("Belum ada tugas"))],
+                children: [
+                  Center(
+                    child: Text("Belum ada tugas"),
+                  ),
+                ],
               )
             : ListView.builder(
                 padding: const EdgeInsets.all(48),
                 itemCount: _tasksList.length,
-                itemBuilder: (context, index) =>
-                    TaskChecklist(task: _tasksList[index]),
+                itemBuilder: (context, index) => TaskChecklist(
+                  task: _tasksList[index],
+                ),
               ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (context) => AddTaskDialog(),
+          );
+        },
       ),
     );
   }
@@ -85,6 +99,7 @@ class _TaskChecklistState extends State<TaskChecklist> {
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         isLoading
             ? const CircularProgressIndicator()
@@ -95,12 +110,84 @@ class _TaskChecklistState extends State<TaskChecklist> {
         const SizedBox(
           width: 16,
         ),
-        Text(
-          widget.task.task,
-          style: TextStyle(
-            decoration:
-                widget.task.isCompleted ? TextDecoration.lineThrough : null,
+        Flexible(
+          child: Text(
+            widget.task.task,
+            style: TextStyle(
+              decoration:
+                  widget.task.isCompleted ? TextDecoration.lineThrough : null,
+            ),
           ),
+        ),
+      ],
+    );
+  }
+}
+
+class AddTaskDialog extends StatefulWidget {
+  const AddTaskDialog({Key? key}) : super(key: key);
+
+  @override
+  State<AddTaskDialog> createState() => _AddTaskDialogState();
+}
+
+class _AddTaskDialogState extends State<AddTaskDialog> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  TextEditingController _taskController = TextEditingController();
+
+  bool isLoading = false;
+
+  void addTask() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        isLoading = true;
+      });
+      String newTask = _taskController.text;
+      try {
+        await _tasksFirestore.addNewTask(newTask);
+        Navigator.pop(context);
+      } on FirebaseException catch (e) {
+        setState(() {
+          isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Terjadi kesalahan: ${e.message}"),
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text("Tambah tugas baru"),
+      content: Form(
+        key: _formKey,
+        child: TextFormField(
+          decoration: const InputDecoration(
+            label: Text('Tugas baru'),
+          ),
+          controller: _taskController,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Tugas baru tidak boleh kosong';
+            }
+            return null;
+          },
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: Text("Kembali"),
+        ),
+        ElevatedButton(
+          child: isLoading ? CircularProgressIndicator() : Text('Tambah'),
+          onPressed: isLoading ? null : addTask,
         ),
       ],
     );
