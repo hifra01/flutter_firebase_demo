@@ -13,25 +13,36 @@ class TasksSection extends StatefulWidget {
 }
 
 class _TasksSectionState extends State<TasksSection> {
+  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
+      GlobalKey<RefreshIndicatorState>();
   List<TaskItem> _tasksList = [];
 
   Future<void> _getTasks() async {
     _tasksList = await _tasksFirestore.getAllTasks();
-    print(_tasksList);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance!.addPostFrameCallback((_) async {
+      _refreshIndicatorKey.currentState!.show();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: RefreshIndicator(
+        key: _refreshIndicatorKey,
         onRefresh: () async {
           await _getTasks();
           setState(() {});
         },
-        child: _tasksList.length == 0
+        child: _tasksList.isEmpty
             ? ListView(
                 padding: const EdgeInsets.all(48),
-                children: [
+                children: const [
                   Center(
                     child: Text("Belum ada tugas"),
                   ),
@@ -46,11 +57,11 @@ class _TasksSectionState extends State<TasksSection> {
               ),
       ),
       floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
         onPressed: () {
           showDialog(
             context: context,
-            builder: (context) => AddTaskDialog(),
+            builder: (context) => const AddTaskDialog(),
           );
         },
       ),
@@ -101,12 +112,10 @@ class _TaskChecklistState extends State<TaskChecklist> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        isLoading
-            ? const CircularProgressIndicator()
-            : Checkbox(
-                value: widget.task.isCompleted,
-                onChanged: onCheckboxChanged,
-              ),
+        Checkbox(
+          value: widget.task.isCompleted,
+          onChanged: isLoading ? null : onCheckboxChanged,
+        ),
         const SizedBox(
           width: 16,
         ),
@@ -133,7 +142,7 @@ class AddTaskDialog extends StatefulWidget {
 
 class _AddTaskDialogState extends State<AddTaskDialog> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  TextEditingController _taskController = TextEditingController();
+  final TextEditingController _taskController = TextEditingController();
 
   bool isLoading = false;
 
@@ -183,10 +192,12 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
           onPressed: () {
             Navigator.pop(context);
           },
-          child: Text("Kembali"),
+          child: const Text("Kembali"),
         ),
         ElevatedButton(
-          child: isLoading ? CircularProgressIndicator() : Text('Tambah'),
+          child: isLoading
+              ? const CircularProgressIndicator()
+              : const Text('Tambah'),
           onPressed: isLoading ? null : addTask,
         ),
       ],
